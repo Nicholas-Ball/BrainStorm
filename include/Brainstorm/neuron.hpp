@@ -2,7 +2,7 @@
 #include <vector>
 
 namespace Brainstorm {
-	enum Types {SIGMOID};
+	enum Types {SIGMOID,RELU}; //neuron activation types
 	class Neuron
 	{
 		public:
