@@ -18,3 +18,11 @@ void Brainstorm::Training::AddTrainingData(std::vector<double> input,std::vector
 }
 
 //feed forward natural selection training
+void Brainstorm::Training::NatrualSelectionFF(Brainstorm::FeedForward network)
+{
+    //get network
+    auto net = network.GetNetwork();
+
+    //
+    
+}

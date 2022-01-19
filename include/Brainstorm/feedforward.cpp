@@ -93,3 +93,15 @@ void Brainstorm::FeedForward::Run(std::vector<double> input)
     //set result of the output of last layer
     this->result = input;
 }
+
+std::vector<std::vector<Brainstorm::Neuron>>* Brainstorm::FeedForward::GetNetwork()
+{
+    return &this->network;
+}
+
+Brainstorm::FeedForward::FeedForward(const FeedForward &f);
+{
+    
+}
+
+

@@ -26,5 +26,12 @@ namespace Brainstorm {
 			//run the feed forward network
 			void Run(std::vector<double> input);
 
+			//returns pointer to raw network
+			std::vector<std::vector<Brainstorm::Neuron>>* GetNetwork();
+
+			FeedForward();
+
+			FeedForward(const FeedForward &f);
+
 	}; 
 };
