@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <time.h> 
+#include <thread>
 #include "neuron.hpp"
 #include "math.hpp"
 
@@ -28,10 +30,28 @@ namespace Brainstorm {
 
 			//returns pointer to raw network
 			std::vector<std::vector<Brainstorm::Neuron>>* GetNetwork();
+			
+			//picks random nueron in random layer to randomize weight
+			void Randomize();
 
-			FeedForward();
+			FeedForward()
+			{
+   				//set seed
+   				srand(time(NULL) + std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			}
+			
 
-			FeedForward(const FeedForward &f);
+			//copy constructor
+			FeedForward(const FeedForward &f)
+			{
+   				//set seed
+   				srand(time(NULL) + std::hash<std::thread::id>{}(std::this_thread::get_id()));
+				   
+				//copy core meta data
+				this->network = f.network;
+				this->type = f.type;
+				this->function = f.function;
+			}
 
 	}; 
 };

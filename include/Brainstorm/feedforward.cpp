@@ -99,9 +99,20 @@ std::vector<std::vector<Brainstorm::Neuron>>* Brainstorm::FeedForward::GetNetwor
     return &this->network;
 }
 
-Brainstorm::FeedForward::FeedForward(const FeedForward &f);
+//picks random nueron in random layer to randomize weight
+void Brainstorm::FeedForward::Randomize()
 {
-    
+    //pick layer
+    int layer = rand() % (this->network.size()-1);
+
+    //pick neuron
+    int neuron = rand() % (this->network[layer].size());
+
+    //randomize weights
+    for(int w = 0; w != this->network[layer][neuron].weights.size();w++)
+    {
+        this->network[layer][neuron].weights[w] += (rand() % 10) - 5;
+    }
 }
 
 
