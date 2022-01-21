@@ -77,6 +77,7 @@ void Brainstorm::FeedForward::Run(std::vector<double> input)
             //loop through input data and multiply by weight
             for(int w = 0; w != input.size();w++)
             {
+
                 //if there are more inputs than weights, add a new weight
                 if(w == this->network[l][n].weights.size())
                 {
@@ -84,8 +85,10 @@ void Brainstorm::FeedForward::Run(std::vector<double> input)
                 }
                 calc += input[w]* this->network[l][n].weights[w];
             }
+
            temp.push_back(this->function(calc+this->network[l][n].bias)); //put data+bias through activation function and add to temp for later use
         }
+
         //set next input data
         input = temp;
     }

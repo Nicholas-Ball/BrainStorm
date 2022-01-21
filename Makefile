@@ -1,2 +1,2 @@
 main:
-	g++ *.cpp include/Brainstorm/*.cpp -o build/main -fpermissive
+	g++ *.cpp include/Brainstorm/*.cpp -o build/main -pthread -fpermissive
