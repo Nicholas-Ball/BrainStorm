@@ -1,77 +1,48 @@
 #include "training.hpp"
 #include <functional>
+#include <algorithm>
 #include <map>
-#include <bits/stdc++.h>
 
 int count = 0;
 
-void sort(std::vector<Brainstorm::FeedForward> *arr)
+bool ffCompare(Brainstorm::FeedForward c1,Brainstorm::FeedForward c2)
 {
-	//return arrays of size 1
-	if(arr->size() <= 1) return;
-
-	std::vector<Brainstorm::FeedForward> arr1;
-	std::vector<Brainstorm::FeedForward> arr2;
-
-	int size = (int)(arr->size()/2);
-	//split array
-	for(int i = 0; i != arr->size();i++)
-	{
-		if(i < size)
-		{
-			arr1.push_back(arr->at(i));
-		}
-		else
-		{
-			arr2.push_back(arr->at(i));
-		}
-	}
-
-	//sort split arrays
-	sort(&arr1);
-	sort(&arr2);
-
-	//blank for sorting
-	arr = {};
-
-	std::vector<Brainstorm::FeedForward> temp;
-
-	//sort
-	while(arr1.size() != 0 && arr2.size() != 0)
-	{
-		if(arr1[0].error < arr2[0].error)
-		{
-			temp.push_back(arr1[0]);
-			arr1.erase(arr1.begin());
-		} else
-		{
-			temp.push_back(arr2[0]);
-			arr2.erase(arr2.begin());
-		}
-		arr = &temp;
-	}
-
-
-	if(arr1.size() == 1)
-	{
-		temp.push_back(arr1[0]);
-	}else if(arr2.size() == 1)
-	{
-		temp.push_back(arr2[0]);
-	}
-
-	arr = &temp;
-
+    return c1.error < c2.error;
 }
 
+//Set survival rate (EX: 0.25 == 25%)
+void Brainstorm::Training::SetSurvivalRate(double rate)
+{
+    this->SurvivalRate = rate;
+}
+
+//number of creatues running at once (EX: 1000 == 1000 spawned creatures)
+void Brainstorm::Training::SetNumberOfCreatures(int num)
+{
+    this->NumCreatures = num;
+}
+
+//number of epoches the training data will be runned (EX: 100 == 100 runs)
+void Brainstorm::Training::SetEpoches(int epoches)
+{
+    this->Epoches = epoches;
+}
+
+//turn on / off verbose (This will print out data about the current training)
+void Brainstorm::Training::SetVerbose(bool v)
+{
+    this->Verbose = v;
+}
 
 //train network with specified type
-void Brainstorm::Training::Train(Brainstorm::FeedForward network,TrainingType t,int Epoches)
+Brainstorm::FeedForward Brainstorm::Training::Train(Brainstorm::FeedForward network,TrainingType t)
 {
     if(t == TrainingType::NatrualSelection)
     {
-        NatrualSelectionFF(network,Epoches);
+        network = NatrualSelectionFF(network);
+        return network;
     }
+    return network;
 }
 
 //add training data
@@ -81,55 +52,54 @@ void Brainstorm::Training::AddTrainingData(std::vector<double> input,std::vector
     this->ExcpectedOutputs.push_back(expectedOutput);
 }
 
+std::vector<Brainstorm::FeedForward> networks;
+
 //run network and calc error for feed forward network
-void static RunAndCalc(Brainstorm::FeedForward *network,std::vector<std::vector<double>> *input,std::vector<std::vector<double>> *expectedOutput)
+void static RunAndCalc(int ID,std::vector<std::vector<double>> *input,std::vector<std::vector<double>> *expectedOutput)
 {
-    network->error = 0;
+    networks[ID].error = 0;
 
-		std::cout<<network->error<<std::endl;
-
-		std::cout<<input->size()<<std::endl;
     //run through input data and add calculate error
     for(int i = 0;i != input->size();i++)
     {
 
-			std::cout<<"Network size: "<<network->GetNetwork()->size()<<std::endl;
         //run network
-        network->Run(input->at(i));
+        networks[ID].Run(input->at(i));
 
         //get network output
-        auto out = network->GetOutput();	
+        auto out = networks[ID].GetOutput();	
 
         //calculate error and add it to error total
         for(int o = 0; o != out.size();o++)
         {
-            network->error += (expectedOutput->at(i)[o] - out[o])*(expectedOutput->at(i)[o] - out[o]);
+            networks[ID].error += (expectedOutput->at(i)[o] - out[o])*(expectedOutput->at(i)[o] - out[o]);
         }
-
-			std::cout<<"Test3"<<std::endl;	
-
     }
-
-		std::cout<<"thread finished"<<std::endl;
+    
 }
 
 //feed forward natural selection training
-void Brainstorm::Training::NatrualSelectionFF(Brainstorm::FeedForward network,int Epoches)
+Brainstorm::FeedForward Brainstorm::Training::NatrualSelectionFF(Brainstorm::FeedForward network)
 {
     //array of creature networks
-    std::vector<Brainstorm::FeedForward> networks = {network};
+    networks = {network};
 
     //number of creatures to have at one time
-    int numCreatures = 100;
+    int numCreatures = this->NumCreatures;
 
 		//set the natural selection survival rate
-    double survivalRate = 0.25;
+    double survivalRate = this->SurvivalRate;
+
+
 
     //run through Epoches
-    for(int e = 0; e != Epoches;e++)
+    for(int e = 0; e != this->Epoches;e++)
     {
-			//array of threads to later rejoin them
-			std::vector<std::thread> threads;
+		//array of threads to later rejoin them
+		std::vector<std::thread> threads;
+            
+
+        threads.push_back(std::thread(RunAndCalc,networks.size()-1,&this->Inputs,&this->ExcpectedOutputs));
         //generate networks and run them on a thread
         while(networks.size() != numCreatures)
         {
@@ -139,33 +109,57 @@ void Brainstorm::Training::NatrualSelectionFF(Brainstorm::FeedForward network,in
             //randomize network
             newC.Randomize();
 
-            threads.push_back(std::thread(RunAndCalc,&newC,&this->Inputs,&this->ExcpectedOutputs));
-
             networks.push_back(newC);
+
+            threads.push_back(std::thread(RunAndCalc,networks.size()-1,&this->Inputs,&this->ExcpectedOutputs));
 
         }
 
-				//rejoin threads
-				for(int t = 0; t != threads.size();t++)
-				{
-					threads[t].join();
-				}
-				//sort error smallest to biggest
-				sort(&networks);
+		//rejoin threads
+		for(int t = 0; t != threads.size();t++)
+		{
+			threads[t].join();
+		}
+                
+		//sort error smallest to biggest
+		std::sort(networks.begin(),networks.end(),ffCompare);
 
-				//make data to remove creatures that didn't survive
-				std::vector<Brainstorm::FeedForward> temp;
 
-				//remove all creatures that didn't survive
-				for(int n = 0; n != 25;n++)
-				{
-					std::cout<<n<<": "<<networks[n].error<<std::endl;
-				}
+		//make data to remove creatures that didn't survive
+		std::vector<Brainstorm::FeedForward> temp = {};
 
-				
-				//set data of survived creatures
-				networks = temp;
+		//remove all creatures that didn't survive
+		for(int n = 0; n != networks.size()*survivalRate;n++)
+		{
+            temp.push_back(networks[n]);
+		}
+
+		//set data of survived creatures
+		networks = temp;
+
+        
+
+        if(this->Verbose)
+        {
+            //print best network that isn't nan if in verbose mode
+            for(int n = 0; n != networks.size();n++)
+            {
+                if(networks[n].error != 0)
+                {
+                    std::cout<<"Epoch "<<e<<" error: "<<networks[n].error<<std::endl;
+                    break;
+                }
+            }
+        }
     }
 
-		network = networks[0];
+    //return best network that isn't nan
+    for(int n = 0; n != networks.size();n++)
+    {
+        if(networks[n].error != 0)
+        {
+            return networks[n];
+        }
+    }
+	return networks[0];
 }

@@ -29,6 +29,12 @@ namespace Brainstorm {
 
 			//run the feed forward network
 			void Run(std::vector<double> input);
+			
+			//save network as json;
+			nlohmann::json Save();
+
+			//load network from json
+			void Load(nlohmann::json data);
 
 			//returns pointer to raw network
 			std::vector<std::vector<Brainstorm::Neuron>>* GetNetwork();
@@ -46,14 +52,15 @@ namespace Brainstorm {
 			//copy constructor
 			FeedForward(const FeedForward &f)
 			{
-   			//set seed
-   			srand(time(NULL) + std::hash<std::thread::id>{}(std::this_thread::get_id()));
+   				//set seed
+   				srand(time(NULL) + std::hash<std::thread::id>{}(std::this_thread::get_id()));
 				   
 				//copy core meta data
 				this->network = f.network;
 				this->type = f.type;
 				this->function = f.function;
 				this->result = f.result;
+				this->error = f.error;
 			}
 
 	}; 

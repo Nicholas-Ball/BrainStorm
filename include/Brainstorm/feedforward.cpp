@@ -3,11 +3,66 @@
 */
 
 #include "brainstorm.hpp"
+#include "../nlohmann/json.hpp"
 
 //return network output as array
 std::vector<double> Brainstorm::FeedForward::GetOutput()
 {
     return this->result;
+}
+
+//save network to json data
+nlohmann::json Brainstorm::FeedForward::Save()
+{
+    nlohmann::json j;
+
+    //save network
+    for(int l = 0; l != this->network.size();l++)
+    {
+        for(int n = 0; n != this->network[l].size();n++)
+        {
+            j["network"][l][n] = this->network[l][n].Save();
+        }
+    }
+
+    //save network type
+    if(this->type == Brainstorm::Types::SIGMOID)
+    {
+        j["type"] = 0;
+    } else if(this->type == Brainstorm::Types::RELU)
+    {
+        j["type"] = 1;
+    }
+
+    return j;
+}
+
+//load network from json data
+void Brainstorm::FeedForward::Load(nlohmann::json data)
+{
+    //load network
+    for(int l = 0; l != data["network"].size();l++)
+    {
+        std::vector<Neuron> layer;
+        for(int n = 0; n != data["network"][l].size();n++)
+        {
+            //add neuron to layer
+            Neuron ne;
+            ne.Load(data["network"][l][n]);
+            layer.push_back(ne);
+        }
+        //add layer to network
+        this->network.push_back(layer);
+    }
+
+    //set network type
+    if(data["type"] == 0)
+    {
+        this->SetType(Brainstorm::Types::SIGMOID);
+    } else if(data["type"] == 1)
+    {
+        this->SetType(Brainstorm::Types::RELU);
+    }
 }
 
 //generate feed forward network
