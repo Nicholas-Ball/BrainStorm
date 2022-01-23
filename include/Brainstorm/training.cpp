@@ -2,6 +2,7 @@
 #include <functional>
 #include <algorithm>
 #include <map>
+#include <math.h>
 
 int count = 0;
 
@@ -200,7 +201,7 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
 
             //calculate deltas
             //loop through layers backwards
-            for(int l = network.network.size()-1;l != -1;l--)
+            for(int l = network.network.size()-1;l != 0;l--)
             {   
                 //loop through neurons in layer
                 for(int n = 0; n != network.network[l].size();n++)
@@ -224,6 +225,14 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                             //delta = (currentdelta + (dCost*preOutput*dOut)) / 2
                             network.network[l][n].deltas[w] = (network.network[l][n].deltas[w]+(dCost*pre*dOut))/(1+(t != 0));
                             
+                        } else{
+                            //get previous output
+                            double pre = network.network[l-1][w].output;
+
+                            //derivate of function
+                            double dOut = network.Derivative(network.network[l][n].preActivation);
+
+                            network.network[l][n].deltas[w] = (network.network[l][n].deltas[w]+(pre*dOut))/(1+(t != 0));
                         }
                         
                     }
@@ -238,7 +247,7 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
         
         //update weights
         //loop through layers
-        for(int l = network.network.size()-1; l != network.network.size();l++)
+        for(int l = 1; l != network.network.size();l++)
         {
             //loop through neurons
             for(int n = 0; n != network.network[l].size();n++)

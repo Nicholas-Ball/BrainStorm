@@ -1,5 +1,7 @@
 #include <fstream>
 #include "include/Brainstorm/training.hpp"
+#include "include/img/img.hpp"
+
 
 int main() {
 	Brainstorm::FeedForward ff;
@@ -15,7 +17,8 @@ int main() {
 	t.AddTrainingData({7,2,1},{3,2});
 
 	t.SetNumberOfCreatures(100);
-	t.SetEpoches(1000);
+	t.SetTrainingRate(0.0001);
+	t.SetEpoches(76);
 	t.SetSurvivalRate(0.25);
 	t.SetVerbose(true);
 
@@ -43,6 +46,11 @@ int main() {
 
 	std::cout<<test.GetOutput()[0]<<std::endl;
 	std::cout<<test.GetOutput()[1]<<std::endl;
+
+	Img img("dice.png");
+	
+
+	
 
 	
 } 
