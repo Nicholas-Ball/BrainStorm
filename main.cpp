@@ -3,7 +3,7 @@
 
 int main() {
 	Brainstorm::FeedForward ff;
-	ff.SetType(Brainstorm::Types::RELU);
+	ff.SetType(Brainstorm::Types::LRELU);
 	ff.Generate({2,3,2});
 	ff.Run({7,2,1});
 
@@ -19,7 +19,7 @@ int main() {
 	t.SetSurvivalRate(0.25);
 	t.SetVerbose(true);
 
-	ff = t.Train(ff,Brainstorm::TrainingType::NatrualSelection);
+	ff = t.Train(ff,Brainstorm::TrainingType::BackPropagation);
 
 	ff.Run({7,2,1});
 

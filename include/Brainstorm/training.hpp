@@ -1,7 +1,7 @@
 #include "brainstorm.hpp"
 
 namespace Brainstorm {
-    enum TrainingType {NatrualSelection};
+    enum TrainingType {NatrualSelection,BackPropagation};
 
     class Training{
         private:
@@ -12,7 +12,8 @@ namespace Brainstorm {
             double SurvivalRate = 0.25;
             int Epoches = 1000;
 
-            Brainstorm::FeedForward NatrualSelectionFF(Brainstorm::FeedForward network); //natural selection for feed Forward networks
+            Brainstorm::FeedForward NatrualSelectionFF(Brainstorm::FeedForward network); // natural selection for feed Forward networks
+            Brainstorm::FeedForward BackPropagationFF(Brainstorm::FeedForward network); // backpropagtion for feed Forward networks
         public:
             Brainstorm::FeedForward Train(Brainstorm::FeedForward network,TrainingType t); //Train Feed forward network with specified type
             

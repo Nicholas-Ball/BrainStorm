@@ -32,6 +32,9 @@ nlohmann::json Brainstorm::FeedForward::Save()
     } else if(this->type == Brainstorm::Types::RELU)
     {
         j["type"] = 1;
+    }else if(this->type == Brainstorm::Types::LRELU)
+    {
+        j["type"] = 2;
     }
 
     return j;
@@ -62,6 +65,9 @@ void Brainstorm::FeedForward::Load(nlohmann::json data)
     } else if(data["type"] == 1)
     {
         this->SetType(Brainstorm::Types::RELU);
+    }else if(data["type"] == 2)
+    {
+        this->SetType(Brainstorm::Types::LRELU);
     }
 }
 
@@ -87,6 +93,7 @@ void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix)
             for(int w = 0; l != 0 && w != neuronMatrix[l-1];w++)
             {
                 newNeuron.weights.push_back(1.0);
+                newNeuron.deltas.push_back(0.0);
             }
 
             //add to layer
@@ -108,10 +115,17 @@ void Brainstorm::FeedForward::SetType(Types t)
     if(t == Types::SIGMOID)
     {
         this->function = math::Sigmoid;
+        this->dfunction = math::dSigmoid;
     }
     else if(t == Types::RELU)
     {
         this->function = math::RELU;
+        this->dfunction = math::dRELU;
+    }
+    else if(t == Types::LRELU)
+    {
+        this->function = math::LRELU;
+        this->dfunction = math::dLRELU;
     }
     else{
         std::cout<<"Invaild type"<<std::endl;
@@ -141,7 +155,9 @@ void Brainstorm::FeedForward::Run(std::vector<double> input)
                 calc += input[w]* this->network[l][n].weights[w];
             }
 
-           temp.push_back(this->function(calc+this->network[l][n].bias)); //put data+bias through activation function and add to temp for later use
+           this->network[l][n].output = this->function(calc+this->network[l][n].bias);
+           temp.push_back(this->network[l][n].output); //put data+bias through activation function and add to temp for later use
+           this->network[l][n].preActivation = calc+this->network[l][n].bias;
         }
 
         //set next input data

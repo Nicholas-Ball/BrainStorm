@@ -9,15 +9,19 @@ namespace Brainstorm {
 	class FeedForward
 	{
 		private:
-			std::vector<std::vector<Brainstorm::Neuron>> network; //network array
+			std::vector<double> result; //array of outputs from last layer
 			Brainstorm::Types type = Brainstorm::SIGMOID; // type of network like RELU or SIGMOID
 			double (*function)(double) = math::Sigmoid; //mathmatical function of current activation function
-			std::vector<double> result; //array of outputs from last layer
+			double (*dfunction)(double) = math::Sigmoid; //mathmatical derivative function of current activation function
 			
 
 		public:
+			std::vector<std::vector<Brainstorm::Neuron>> network; //network array
+
 			//error of network
 			double error = 0;
+
+
 			//return network output as array
 			std::vector<double> GetOutput();
 
@@ -41,6 +45,11 @@ namespace Brainstorm {
 			
 			//picks random nueron in random layer to randomize weight
 			void Randomize();
+
+			double Derivative(double x)
+			{
+				return dfunction(x);
+			}
 
 			FeedForward()
 			{

@@ -41,6 +41,10 @@ Brainstorm::FeedForward Brainstorm::Training::Train(Brainstorm::FeedForward netw
     {
         network = NatrualSelectionFF(network);
         return network;
+    } else if (t == TrainingType::BackPropagation)
+    {
+        network = BackPropagationFF(network);
+        return network;
     }
     return network;
 }
@@ -72,7 +76,7 @@ void static RunAndCalc(int ID,std::vector<std::vector<double>> *input,std::vecto
         //calculate error and add it to error total
         for(int o = 0; o != out.size();o++)
         {
-            networks[ID].error += (expectedOutput->at(i)[o] - out[o])*(expectedOutput->at(i)[o] - out[o]);
+            networks[ID].error += (out[o] - expectedOutput->at(i)[o])*(out[o] - expectedOutput->at(i)[o]);
         }
     }
     
@@ -162,4 +166,88 @@ Brainstorm::FeedForward Brainstorm::Training::NatrualSelectionFF(Brainstorm::Fee
         }
     }
 	return networks[0];
+}
+
+
+Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::FeedForward network)
+{
+    double learningRate = 0.0001;
+    //loop through epoches
+    for(int e = 0; e != this->Epoches;e++)
+    {
+        //get network pointer
+
+        //loop through training data
+        for(int t = 0; t != this->Inputs.size();t++)
+        {
+            network.error = 0;
+
+            network.Run(this->Inputs[t]);
+            auto out = network.GetOutput();
+
+            //calculate cost
+            for(int o = 0; o != out.size();o++)
+            {
+                network.error += (out[o] - this->ExcpectedOutputs[t][o])*(out[o] - this->ExcpectedOutputs[t][o]);
+            }
+
+            //calculate deltas
+            //loop through layers backwards
+            for(int l = network.network.size()-1;l != -1;l--)
+            {   
+                //loop through neurons in layer
+                for(int n = 0; n != network.network[l].size();n++)
+                {
+                    //loop through weights of a neuron
+                    for(int w = 0; w != network.network[l][n].weights.size();w++)
+                    {
+                        //if on last layer use network error 
+                        if(l == network.network.size()-1)
+                        {   
+                            
+                            // dCost = 2(output - expected)
+                            double dCost = 2*(network.network[l][n].output - this->ExcpectedOutputs[t][n]);
+
+                            //get previous output
+                            double pre = network.network[l-1][w].output;
+
+                            //derivate of function
+                            double dOut = network.Derivative(network.network[l][n].preActivation);
+
+                            //delta = (currentdelta + (dCost*preOutput*dOut)) / 2
+                            network.network[l][n].deltas[w] = (network.network[l][n].deltas[w]+(dCost*pre*dOut))/(1+(t != 0));
+                            
+                        }
+                        
+                    }
+                    
+                }
+            }
+            
+        }
+
+        if(this->Verbose) std::cout<<"Epoch "<<e<<" Error: "<<network.error<<std::endl;
+        network.error = 0;
+        
+        //update weights
+        //loop through layers
+        for(int l = network.network.size()-1; l != network.network.size();l++)
+        {
+            //loop through neurons
+            for(int n = 0; n != network.network[l].size();n++)
+            {
+                //loop through weights
+                for(int w = 0; w != network.network[l][n].weights.size(); w++)
+                {
+                    //set new weight
+                    network.network[l][n].weights[w] -= (learningRate * network.network[l][n].deltas[w]);
+
+                    //reset delta
+                    network.network[l][n].deltas[w] = 0;
+                }
+            }
+        }
+
+    }
+    return network;
 }

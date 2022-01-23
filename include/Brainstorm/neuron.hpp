@@ -3,7 +3,7 @@
 #include "../nlohmann/json.hpp"
 
 namespace Brainstorm {
-	enum Types {SIGMOID,RELU}; //neuron activation types
+	enum Types {SIGMOID,RELU,LRELU}; //neuron activation types
 	class Neuron
 	{
 		public:
@@ -11,6 +11,9 @@ namespace Brainstorm {
 			std::vector<double> weights;
 			bool Input = false;
 			double output;
+			std::vector<double> deltas;
+			double cost = 0;
+			double preActivation = 0;
 			std::vector<Neuron> Inputs;
 
 			//Save as json
