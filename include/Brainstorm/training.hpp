@@ -11,6 +11,7 @@ namespace Brainstorm {
             int NumCreatures = 100;
             double SurvivalRate = 0.25;
             int Epoches = 1000;
+            double TrainingRate = 0.1;
 
             Brainstorm::FeedForward NatrualSelectionFF(Brainstorm::FeedForward network); // natural selection for feed Forward networks
             Brainstorm::FeedForward BackPropagationFF(Brainstorm::FeedForward network); // backpropagtion for feed Forward networks
@@ -23,6 +24,9 @@ namespace Brainstorm {
             void SetSurvivalRate(double rate);
             void SetNumberOfCreatures(int num);
             void SetEpoches(int epoches);
+
+            //back propagtion set data
+            void SetTrainingRate(double x);
 
             //turn on / off verbose
             void SetVerbose(bool v);

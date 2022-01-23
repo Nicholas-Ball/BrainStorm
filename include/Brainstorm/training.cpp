@@ -169,9 +169,16 @@ Brainstorm::FeedForward Brainstorm::Training::NatrualSelectionFF(Brainstorm::Fee
 }
 
 
+//Set training rate (EX: 0.1)
+void Brainstorm::Training::SetTrainingRate(double x)
+{
+    this->TrainingRate = x;
+}
+
+
 Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::FeedForward network)
 {
-    double learningRate = 0.0001;
+    double learningRate = this->TrainingRate;
     //loop through epoches
     for(int e = 0; e != this->Epoches;e++)
     {
