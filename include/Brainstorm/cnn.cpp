@@ -1,5 +1,4 @@
 #include "brainstorm.hpp"
-#include "../img/img.hpp"
 
 
 //append scan to scan list
@@ -145,6 +144,26 @@ void Brainstorm::CNN::Run(Img image)
 
         pooled = tempPool;
     }
+
+		std::vector<double> flat;
+
+		//std::vector<std::vector<std::vector<double>>> pooled;
+
+		//flatten scanned data
+		for(int p = 0; p != pooled.size();p++)
+		{
+			for(int y = 0; y != pooled[p].size();y++)
+			{
+				for(int x = 0; x != pooled[p][y].size();x++)
+				{
+					//add to flattened data
+					flat.push_back(pooled[p][y][x]);
+				}
+			}
+		}
+
+		//run network
+		this->FFNetwork.Run(flat);
     
 } 
 
