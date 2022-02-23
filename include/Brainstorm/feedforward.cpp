@@ -4,6 +4,7 @@
 
 #include "brainstorm.hpp"
 #include "../nlohmann/json.hpp"
+#include "../img/img.hpp"
 
 //return network output as array
 std::vector<double> Brainstorm::FeedForward::GetOutput()
