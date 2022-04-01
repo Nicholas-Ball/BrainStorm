@@ -5,15 +5,18 @@
 #include "neuron.hpp"
 #include "math.hpp"
 
+
+
+
 namespace Brainstorm {
 
 	class FeedForward
 	{
 		private:
 			std::vector<double> result; //array of outputs from last layer
-			Brainstorm::Types type = Brainstorm::SIGMOID; // type of network like RELU or SIGMOID
-			double (*function)(double) = math::Sigmoid; //mathmatical function of current activation function
-			double (*dfunction)(double) = math::Sigmoid; //mathmatical derivative function of current activation function
+			std::vector<Brainstorm::Types> types = {Brainstorm::Types::RELU}; // type of network like RELU or SIGMOID with array refering to each layer
+			double Calc(double x,int layer); //mathmatical function of current activation function
+			double dCalc(double x,int layer); //mathmatical derivative function of current activation function
 			
 
 		public:
@@ -26,14 +29,14 @@ namespace Brainstorm {
 			//return network output as array
 			std::vector<double> GetOutput();
 
-			//Set type of network like RELU or SIGMOID
-			void SetType(Brainstorm::Types t);
-
 			//Generate the feed forward network
-			void Generate(std::vector<int> neuronMatrix);
+			void Generate(std::vector<int> neuronMatrix,std::vector<Brainstorm::Types> functions);
+			void Generate(std::vector<int> neuronMatrix,Brainstorm::Types function);
 
 			//run the feed forward network
 			void Run(std::vector<double> input);
+
+            
 			
 			//save network as json;
 			nlohmann::json Save();
@@ -47,9 +50,9 @@ namespace Brainstorm {
 			//picks random nueron in random layer to randomize weight
 			void Randomize();
 
-			double Derivative(double x)
+			double Derivative(double x,int layer)
 			{
-				return dfunction(x);
+				return dCalc(x,layer);
 			}
 
 			FeedForward()
@@ -67,14 +70,57 @@ namespace Brainstorm {
 				   
 				//copy core meta data
 				this->network = f.network;
-				this->type = f.type;
-				this->function = f.function;
+				this->types = f.types;
 				this->result = f.result;
 				this->error = f.error;
 			}
 
 	};
 };
+
+double Brainstorm::FeedForward::Calc(double x,int layer)
+{
+    //get layer type
+    auto type = this->types[layer];
+
+    
+    //preform activation function and return it
+    if(type == Brainstorm::Types::SIGMOID)
+    {
+        return math::Sigmoid(x);
+    } else if(type == Brainstorm::Types::RELU)
+    {
+        return math::RELU(x);
+    }else if(type == Brainstorm::Types::LRELU)
+    {
+        return math::LRELU(x);
+    }else if(type == Brainstorm::Types::TANH)
+    {
+        return math::TANH(x);
+    }
+
+}
+
+double Brainstorm::FeedForward::dCalc(double x,int layer)
+{
+    //get layer type
+    auto type = this->types[layer];
+    
+    //get derivative of activation function and return it
+    if(type == Brainstorm::Types::SIGMOID)
+    {
+        return math::dSigmoid(x);
+    } else if(type == Brainstorm::Types::RELU)
+    {
+        return math::dRELU(x);
+    }else if(type == Brainstorm::Types::LRELU)
+    {
+        return math::dLRELU(x);
+    }else if(type == Brainstorm::Types::TANH)
+    {
+        return math::dTANH(x);
+    }
+}
 
 //return network output as array
 std::vector<double> Brainstorm::FeedForward::GetOutput()
@@ -95,18 +141,26 @@ nlohmann::json Brainstorm::FeedForward::Save()
             j["network"][l][n] = this->network[l][n].Save();
         }
     }
+    //save type by layer
+    for(int i = 0; i != this->types.size();i++)
+    {
+        //save network type
+        if(this->types[i] == Brainstorm::Types::SIGMOID)
+        {
+            j["types"][i] = 0;
+        } else if(this->types[i] == Brainstorm::Types::RELU)
+        {
+            j["types"][i] = 1;
+        }else if(this->types[i] == Brainstorm::Types::LRELU)
+        {
+            j["types"][i] = 2;
+        }else if(this->types[i] == Brainstorm::Types::TANH)
+        {
+            j["types"][i] = 3;
+        }
 
-    //save network type
-    if(this->type == Brainstorm::Types::SIGMOID)
-    {
-        j["type"] = 0;
-    } else if(this->type == Brainstorm::Types::RELU)
-    {
-        j["type"] = 1;
-    }else if(this->type == Brainstorm::Types::LRELU)
-    {
-        j["type"] = 2;
     }
+
 
     return j;
 }
@@ -129,30 +183,60 @@ void Brainstorm::FeedForward::Load(nlohmann::json data)
         this->network.push_back(layer);
     }
 
-    //set network type
-    if(data["type"] == 0)
+    //reset network types
+    this->types = {};
+
+    for(int i = 0; i != data["types"].size();i++)
     {
-        this->SetType(Brainstorm::Types::SIGMOID);
-    } else if(data["type"] == 1)
-    {
-        this->SetType(Brainstorm::Types::RELU);
-    }else if(data["type"] == 2)
-    {
-        this->SetType(Brainstorm::Types::LRELU);
+        //set network type
+        if(data["types"][i] == 0)
+        {
+            this->types.push_back(Brainstorm::Types::SIGMOID);
+        } else if(data["types"] == 1)
+        {
+            this->types.push_back(Brainstorm::Types::RELU);
+        }else if(data["types"] == 2)
+        {
+            this->types.push_back(Brainstorm::Types::LRELU);
+        }else if(this->types[i] == 3)
+        {
+            this->types.push_back(Brainstorm::Types::TANH);
+        }
+
     }
+
 }
 
-//generate feed forward network
-void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix)
+//generate feed forward network with all same type
+void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix,Brainstorm::Types function){
+    //make array of types
+    std::vector<Brainstorm::Types> functions;
+
+    //set all functions as one function
+    for(int i = 0; i != neuronMatrix.size();i++)
+    {
+        functions.push_back(function);
+    }
+
+    //generate
+    this->Generate(neuronMatrix,functions);
+}
+
+//generate feed forward network with unique types
+void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix,std::vector<Brainstorm::Types> functions)
 {
     //create layer
     for(int l = 0; l != neuronMatrix.size();l++)
     {
         std::vector<Brainstorm::Neuron> layer;
+
+        //set activation type 
+        this->types.push_back(functions[l]);
+
         //create neurons
         for(int n = 0; n != neuronMatrix[l];n++)
         {
-            //vreate new neuron
+            //create new neuron
             Brainstorm::Neuron newNeuron;
 
             //set defualt data
@@ -163,7 +247,7 @@ void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix)
             //create weights
             for(int w = 0; l != 0 && w != neuronMatrix[l-1];w++)
             {
-                newNeuron.weights.push_back(1.0);
+                newNeuron.weights.push_back((rand() % 10) - 5);
                 newNeuron.deltas.push_back(0.0);
             }
 
@@ -177,32 +261,6 @@ void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix)
 
 }
 
-void Brainstorm::FeedForward::SetType(Types t)
-{
-    //set current type of function
-    this->type = t;
-    
-    //set activation function
-    if(t == Types::SIGMOID)
-    {
-        this->function = math::Sigmoid;
-        this->dfunction = math::dSigmoid;
-    }
-    else if(t == Types::RELU)
-    {
-        this->function = math::RELU;
-        this->dfunction = math::dRELU;
-    }
-    else if(t == Types::LRELU)
-    {
-        this->function = math::LRELU;
-        this->dfunction = math::dLRELU;
-    }
-    else{
-        std::cout<<"Invaild type"<<std::endl;
-        std::abort();
-    }
-}
 
 void Brainstorm::FeedForward::Run(std::vector<double> input)
 {
@@ -226,7 +284,7 @@ void Brainstorm::FeedForward::Run(std::vector<double> input)
                 calc += input[w]* this->network[l][n].weights[w];
             }
 
-           this->network[l][n].output = this->function(calc+this->network[l][n].bias);
+           this->network[l][n].output = this->Calc(calc+this->network[l][n].bias,l);
            temp.push_back(this->network[l][n].output); //put data+bias through activation function and add to temp for later use
            this->network[l][n].preActivation = calc+this->network[l][n].bias;
         }

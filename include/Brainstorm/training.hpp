@@ -213,8 +213,6 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
     //loop through epoches
     for (int e = 0; e != this->Epoches; e++)
     {
-        //get network pointer
-
         //loop through training data
         for (int t = 0; t != this->Inputs.size(); t++)
         {
@@ -250,7 +248,7 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                             double pre = network.network[l - 1][w].output;
 
                             //derivate of function
-                            double dOut = network.Derivative(network.network[l][n].preActivation);
+                            double dOut = network.Derivative(network.network[l][n].preActivation,l);
 
                             //delta = (currentdelta + (dCost*preOutput*dOut)) / 2
                             network.network[l][n].deltas[w] = (network.network[l][n].deltas[w] + (dCost * pre * dOut)) / (1 + (t != 0));
@@ -261,7 +259,7 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                             double pre = network.network[l - 1][w].output;
 
                             //derivate of function
-                            double dOut = network.Derivative(network.network[l][n].preActivation);
+                            double dOut = network.Derivative(network.network[l][n].preActivation,l);
 
                             network.network[l][n].deltas[w] = (network.network[l][n].deltas[w] + (pre * dOut)) / (1 + (t != 0));
                         }

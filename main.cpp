@@ -17,8 +17,7 @@ int main() {
 	/**/
 	//make network
 	Brainstorm::FeedForward ff;
-	ff.Generate({20,1});
-	ff.SetType(Brainstorm::Types::SIGMOID);
+	ff.Generate({5,5,5,5,5,2},{Brainstorm::Types::LRELU,Brainstorm::Types::LRELU,Brainstorm::Types::LRELU,Brainstorm::Types::LRELU,Brainstorm::Types::LRELU,Brainstorm::Types::LRELU});
 	/**/
 	//initilize cnn
 	Brainstorm::CNN cnn;
@@ -44,25 +43,25 @@ int main() {
 	//make training data
 	Brainstorm::Training tr;
 
-	tr.SetTrainingRate(0.1);
+	tr.SetTrainingRate(0.0000000000000000000005);
 
 	//add dice
 	for(int i = 1; i != 5;i++)
 	{
 		cnn.Run(Img("dice"+std::to_string(i)+".jpg"));
-		tr.AddTrainingData(cnn.GetOutput(),{1});
+		tr.AddTrainingData(cnn.GetOutput(),{100,0});
 	}
 
 	//add not dice
 	for(int i = 1; i != 5;i++)
 	{
 		cnn.Run(Img("notdice"+std::to_string(i)+".jpg"));
-		tr.AddTrainingData(cnn.GetOutput(),{0});
+		tr.AddTrainingData(cnn.GetOutput(),{0,100});
 	}
 
 	//train
 	tr.SetVerbose(true);
-	tr.SetEpoches(15);
+	tr.SetEpoches(100);
 	ff = tr.Train(ff,Brainstorm::Training::TrainingType::BackPropagation);
 
 	
@@ -75,13 +74,13 @@ int main() {
 
 	cnn.Run(Img("dice4.jpg"));
 	ff.Run(cnn.GetOutput());
-	std::cout<<"Dice: "<<ff.GetOutput()[0]<<std::endl;
+	std::cout<<"Is Dice: "<<"is: "<<ff.GetOutput()[0]<<" Is not: "<<ff.GetOutput()[1]<<std::endl;
 
 	auto t1 = cnn.GetOutput();
 
 	cnn.Run(Img("notdice1.jpg"));
 	ff.Run(cnn.GetOutput());
-	std::cout<<"Not Dice: "<<ff.GetOutput()[0]<<std::endl;
+	std::cout<<"Is Not Dice: "<<"is: "<<ff.GetOutput()[0]<<" Is not: "<<ff.GetOutput()[1]<<std::endl;
 
 	auto t2 = cnn.GetOutput();
 

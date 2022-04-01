@@ -3,7 +3,7 @@
 #include "../nlohmann/json.hpp"
 
 namespace Brainstorm {
-	enum Types {SIGMOID,RELU,LRELU}; //neuron activation types
+	enum Types {SIGMOID,RELU,LRELU,TANH}; //neuron activation types
 	class Neuron
 	{
 		public:

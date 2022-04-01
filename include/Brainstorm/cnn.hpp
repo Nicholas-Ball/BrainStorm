@@ -90,17 +90,20 @@ void Brainstorm::CNN::Run(Img image)
                     {
                         double calculation = 0;
 
-                        //calculate scan position
-
                         //loop through scan calulations 
                         for(int yPixel = 0; yPixel != this->Scans[s].size();yPixel++)
                         {
                             for(int xPixel = 0; xPixel != this->Scans[s][yPixel].size();xPixel++)
                             {
                                 calculation += pooled[p][y][x] * this->Scans[s][yPixel][xPixel];
+
                             }
                         }
 
+                        
+                        //relu calculation (removes negitives)
+                        math::RELU(calculation);
+                        
                         xLine.push_back(calculation);
                     }
                     data.push_back(xLine);

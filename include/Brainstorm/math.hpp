@@ -23,6 +23,12 @@ class math
             return (x > 0)*x+((x <= 0)*x*0.1);
          }
 
+         static double TANH(double x)
+         {
+            //(2 / (1 + e^(-2x))) - 1
+            return (( 2 / (1 + EXP(-2*x))) - 1);
+         }
+
         static double EXP(double a){
           union { double d; long long x; } u;
           u.x = (long long)(6497320848556798LL * a + 0x3fef127e83d16f12LL);
@@ -44,5 +50,11 @@ class math
         {
            return (x > 0)+((x <= 0)*0.1);
         }
+        
+         static double dTANH(double x)
+         {
+            //1 - TANH(x)^2
+            return (1 - (TANH(x)*TANH(x)));
+         }
 
 };
