@@ -6,6 +6,35 @@
 
 int count = 0;
 
+namespace Brainstorm{
+
+    class Training
+    {
+        private:
+            double SurvivalRate,TrainingRate;
+            int NumCreatures,Epoches;
+            bool Verbose;
+            std::vector<std::vector<double>> Inputs,ExcpectedOutputs;
+
+
+        public:
+            enum TrainingType {NatrualSelection,BackPropagation};
+
+            //natural selection
+            void SetSurvivalRate(double rate);
+            void SetNumberOfCreatures(int num);
+            void SetEpoches(int epoches);
+            void SetVerbose(bool v);
+            Brainstorm::FeedForward Train(Brainstorm::FeedForward network, TrainingType t);
+            void AddTrainingData(std::vector<double> input, std::vector<double> expectedOutput);
+            Brainstorm::FeedForward NatrualSelectionFF(Brainstorm::FeedForward network);
+
+            //backpropagation
+            void SetTrainingRate(double x);
+            Brainstorm::FeedForward BackPropagationFF(Brainstorm::FeedForward network);
+    };
+}
+
 bool ffCompare(Brainstorm::FeedForward c1, Brainstorm::FeedForward c2)
 {
     return c1.error < c2.error;
