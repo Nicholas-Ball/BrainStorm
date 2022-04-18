@@ -98,6 +98,7 @@ double Brainstorm::FeedForward::Calc(double x,int layer)
     {
         return math::TANH(x);
     }
+    return -1;
 
 }
 
@@ -120,6 +121,7 @@ double Brainstorm::FeedForward::dCalc(double x,int layer)
     {
         return math::dTANH(x);
     }
+    return -1;
 }
 
 //return network output as array
@@ -240,7 +242,7 @@ void Brainstorm::FeedForward::Generate(std::vector<int> neuronMatrix,std::vector
             Brainstorm::Neuron newNeuron;
 
             //set defualt data
-            newNeuron.bias = 1;
+            newNeuron.bias = 0;
             newNeuron.Input = (l == 0);
             newNeuron.output = 0;
             

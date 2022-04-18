@@ -11,9 +11,10 @@ namespace Brainstorm{
     class Training
     {
         private:
-            double SurvivalRate,TrainingRate;
+            double SurvivalRate;
+            double TrainingRate = 0.1;
             int NumCreatures,Epoches;
-            bool Verbose;
+            bool Verbose,Automated = false;
             std::vector<std::vector<double>> Inputs,ExcpectedOutputs;
 
 
@@ -30,7 +31,8 @@ namespace Brainstorm{
             Brainstorm::FeedForward NatrualSelectionFF(Brainstorm::FeedForward network);
 
             //backpropagation
-            void SetTrainingRate(double x);
+            void SetTrainingRate(double x); //manually set training rate
+            void SetAutomated(bool a); //automatically set training rate
             Brainstorm::FeedForward BackPropagationFF(Brainstorm::FeedForward network);
     };
 }
@@ -63,6 +65,11 @@ void Brainstorm::Training::SetVerbose(bool v)
 {
     this->Verbose = v;
 }
+
+//automatically set training rate (true/false)
+void Brainstorm::Training::SetAutomated(bool a){
+    this->Automated = a;
+} 
 
 //train network with specified type
 Brainstorm::FeedForward Brainstorm::Training::Train(Brainstorm::FeedForward network, TrainingType t)
@@ -209,22 +216,42 @@ void Brainstorm::Training::SetTrainingRate(double x)
 
 Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::FeedForward network)
 {
+    //get learning rate
     double learningRate = this->TrainingRate;
+
+    //previous error
+    double pError = 100000000000000000000000000000000000000000000.0;
+
+    //used to stop training under automated
+    bool keepGoing = this->Automated;
+
+    //count the number of same errors to end early
+    int same = 0;
+
+    for(int x = 0; x != this->ExcpectedOutputs.size();x++){
+        for(int y = 0; y != this->ExcpectedOutputs[x].size();y++)
+        {
+            std::cout<<this->ExcpectedOutputs[x][y]<<" ";
+        }
+        
+        std::cout<<std::endl;
+    }
+
     //loop through epoches
-    for (int e = 0; e != this->Epoches; e++)
+    for (int e = 0; e != this->Epoches || keepGoing; e++)
     {
+        network.error = 0;
+        
         //loop through training data
         for (int t = 0; t != this->Inputs.size(); t++)
         {
-            network.error = 0;
-
             network.Run(this->Inputs[t]);
             auto out = network.GetOutput();
 
             //calculate cost
             for (int o = 0; o != out.size(); o++)
             {
-                network.error += (out[o] - this->ExcpectedOutputs[t][o]) * (out[o] - this->ExcpectedOutputs[t][o]);
+                network.error += (out[o] - this->ExcpectedOutputs[t][o])*(out[o] - this->ExcpectedOutputs[t][o]);
             }
 
             //calculate deltas
@@ -251,7 +278,8 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                             double dOut = network.Derivative(network.network[l][n].preActivation,l);
 
                             //delta = (currentdelta + (dCost*preOutput*dOut)) / 2
-                            network.network[l][n].deltas[w] = (network.network[l][n].deltas[w] + (dCost * pre * dOut)) / (1 + (t != 0));
+                            network.network[l][n].deltas[w] += (dCost * pre * dOut);
+                            network.network[l][n].deltas[w] /= (1 + (t != 0));
 
                         }
                         else {
@@ -261,7 +289,8 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                             //derivate of function
                             double dOut = network.Derivative(network.network[l][n].preActivation,l);
 
-                            network.network[l][n].deltas[w] = (network.network[l][n].deltas[w] + (pre * dOut)) / (1 + (t != 0));
+                            network.network[l][n].deltas[w] += (pre * dOut);
+                            network.network[l][n].deltas[w] /= (1 + (t != 0));
                         }
 
                     }
@@ -272,6 +301,33 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
         }
 
         if (this->Verbose) std::cout << "Epoch " << e << " Error: " << network.error << std::endl;
+
+        //for automated adjustment of learning rate
+        if(this->Automated)
+        {
+            //get current error
+            double cError = network.error;
+
+            //decrease learning rate if error is increasing
+            if(pError <=  cError)
+            {
+                learningRate /= 10;
+            }
+
+            if(pError==cError)
+                same++;
+            else
+                same = 0;
+
+            if((cError < 0.0001) || (same == 5))
+            {
+                break;
+            }
+
+        }
+
+        pError = network.error;
+        
         network.error = 0;
 
         //update weights
@@ -285,7 +341,11 @@ Brainstorm::FeedForward Brainstorm::Training::BackPropagationFF(Brainstorm::Feed
                 for (int w = 0; w != network.network[l][n].weights.size(); w++)
                 {
                     //set new weight
-                    network.network[l][n].weights[w] -= (learningRate * network.network[l][n].deltas[w]);
+                    network.network[l][n].weights[w] -= (learningRate * network.network[l][n].output * network.network[l][n].deltas[w]);
+
+                    //set new bias
+                    //network.network[l][n].bias -= (learningRate * 1 * network.network[l][n].deltas[w]);
+
 
                     //reset delta
                     network.network[l][n].deltas[w] = 0;

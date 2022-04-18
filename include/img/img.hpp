@@ -14,6 +14,12 @@ class Img{
 
     
     public:
+        
+        //constructor
+        Img(){
+            
+        };
+
         //constructor
         Img(int x, int y, int comp){
             width = x;
